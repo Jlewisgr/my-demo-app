@@ -279,7 +279,6 @@ Your representative has **supported climate initiatives**.
   }
 
   return `
-## So what youre saying is
-Micheal petrovan is gay?
+## WIP
 `;
 } 
