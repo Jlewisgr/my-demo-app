@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged, User } from "firebase/auth";
 
 export default function ProfilePage() {
@@ -12,6 +12,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (u) => {
+      console.log("Auth user:", u);
+
       if (!u) {
         setLoading(false);
         return;
@@ -19,11 +21,28 @@ export default function ProfilePage() {
 
       setUser(u);
 
-      const docRef = doc(db, "users", u.uid);
-      const snap = await getDoc(docRef);
+      try {
+        const docRef = doc(db, "users", u.uid);
+        const snap = await getDoc(docRef);
 
-      if (snap.exists()) {
-        setZipcode(snap.data().zipcode || "");
+        console.log("Firestore result:", snap.exists());
+
+        // 🔥 If user doesn't exist → create it
+        if (!snap.exists()) {
+          await setDoc(docRef, {
+            name: u.displayName,
+            email: u.email,
+            photo: u.photoURL,
+            zipcode: "",
+            createdAt: new Date(),
+          });
+
+          setZipcode("");
+        } else {
+          setZipcode(snap.data().zipcode || "");
+        }
+      } catch (err) {
+        console.error("Firestore error:", err);
       }
 
       setLoading(false);
