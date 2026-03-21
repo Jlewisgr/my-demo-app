@@ -31,8 +31,8 @@ export default function Home() {
     if (!textareaRef.current) return;
 
     textareaRef.current.style.height = "auto";
-    const newHeight = Math.min(textareaRef.current.scrollHeight, 160);
-    textareaRef.current.style.height = `${newHeight}px`;
+    textareaRef.current.style.height =
+      Math.min(textareaRef.current.scrollHeight, 160) + "px";
   };
 
   useEffect(() => {
@@ -55,64 +55,37 @@ export default function Home() {
     setMessages((prev) => [...prev, userMessage, botMessage]);
     setInput("");
 
-    requestAnimationFrame(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "52px";
-      }
-    });
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "52px";
+    }
   };
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(to bottom right, #f8fafc, #e2e8f0)",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        background: "#f8fafc",
         padding: "24px",
-        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
         style={{
-          width: "100%",
           maxWidth: "900px",
-          height: "85vh",
-          backgroundColor: "white",
-          borderRadius: "20px",
-          boxShadow: "0 12px 30px rgba(0,0,0,0.12)",
+          margin: "0 auto",
+          height: "80vh",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
         }}
       >
-        {/* HEADER */}
-        <div
-          style={{
-            padding: "20px 24px",
-            borderBottom: "1px solid #e5e7eb",
-            backgroundColor: "#0f172a",
-            color: "white",
-          }}
-        >
-          <h1 style={{ margin: 0, fontSize: "28px" }}>RepWatch</h1>
-          <p style={{ margin: "8px 0 0 0", color: "#cbd5e1" }}>
-            Turn frustration into civic action in minutes.
-          </p>
-        </div>
-
         {/* CHAT */}
         <div
           ref={chatContainerRef}
           style={{
             flex: 1,
-            padding: "24px",
             overflowY: "auto",
             display: "flex",
             flexDirection: "column",
-            gap: "14px",
-            backgroundColor: "#f8fafc",
+            gap: "12px",
           }}
         >
           {messages.map((message, index) => {
@@ -129,39 +102,13 @@ export default function Home() {
                 <div
                   style={{
                     maxWidth: "75%",
-                    padding: "14px 16px",
-                    borderRadius: "16px",
+                    padding: "12px",
+                    borderRadius: "12px",
                     backgroundColor: isUser ? "#2563eb" : "white",
-                    color: isUser ? "white" : "#111827",
-                    border: isUser ? "none" : "1px solid #e5e7eb",
-                    boxShadow: isUser
-                      ? "0 6px 18px rgba(37, 99, 235, 0.18)"
-                      : "0 4px 12px rgba(0,0,0,0.06)",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                    lineHeight: "1.5",
+                    color: isUser ? "white" : "black",
                   }}
                 >
-                  <ReactMarkdown
-                    components={{
-                      p: ({ children }) => (
-                        <p style={{ margin: "6px 0" }}>{children}</p>
-                      ),
-                      strong: ({ children }) => (
-                        <strong style={{ fontWeight: 600 }}>{children}</strong>
-                      ),
-                      li: ({ children }) => (
-                        <li style={{ marginLeft: "20px" }}>{children}</li>
-                      ),
-                      h2: ({ children }) => (
-                        <h2 style={{ margin: "8px 0", fontSize: "18px" }}>
-                          {children}
-                        </h2>
-                      ),
-                    }}
-                  >
-                    {message.content}
-                  </ReactMarkdown>
+                  <ReactMarkdown>{message.content}</ReactMarkdown>
                 </div>
               </div>
             );
@@ -169,76 +116,42 @@ export default function Home() {
         </div>
 
         {/* INPUT */}
-        <div
-          style={{
-            padding: "18px",
-            borderTop: "1px solid #e5e7eb",
-            backgroundColor: "white",
-          }}
-        >
-          <div
+        <div style={{ marginTop: "10px", display: "flex", gap: "10px" }}>
+          <textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSend();
+              }
+            }}
+            placeholder="Type your issue..."
             style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "flex-end",
-              border: "1px solid #cbd5e1",
-              borderRadius: "16px",
+              flex: 1,
+              resize: "none",
               padding: "10px",
-              backgroundColor: "#ffffff",
+              borderRadius: "10px",
+              border: "1px solid #ccc",
+              maxHeight: "150px",
+              overflowY: "auto",
+            }}
+          />
+
+          <button
+            onClick={handleSend}
+            style={{
+              backgroundColor: "#2563eb",
+              color: "white",
+              border: "none",
+              padding: "0 20px",
+              borderRadius: "10px",
+              cursor: "pointer",
             }}
           >
-            <textarea
-              ref={textareaRef}
-              rows={1}
-              placeholder="Type an issue like housing, climate, education..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              }}
-              style={{
-                flex: 1,
-                width: "100%",
-                minWidth: 0,
-                height: "52px",
-                maxHeight: "160px",
-                border: "none",
-                outline: "none",
-                resize: "none",
-                fontSize: "16px",
-                lineHeight: "1.5",
-                padding: "10px 12px",
-                fontFamily: "inherit",
-                backgroundColor: "transparent",
-                boxSizing: "border-box",
-                overflowY: "auto",
-                overflowX: "hidden",
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            />
-
-            <button
-              onClick={handleSend}
-              style={{
-                backgroundColor: "#2563eb",
-                color: "white",
-                border: "none",
-                borderRadius: "12px",
-                padding: "0 22px",
-                fontSize: "16px",
-                fontWeight: 600,
-                cursor: "pointer",
-                height: "48px",
-                flexShrink: 0,
-              }}
-            >
-              Send
-            </button>
-          </div>
+            Send
+          </button>
         </div>
       </div>
     </main>
@@ -246,39 +159,11 @@ export default function Home() {
 }
 
 function generateMockResponse(issue: string) {
-  const lowerIssue = issue.toLowerCase();
-
-  if (lowerIssue.includes("housing")) {
-    return `
-## 🏠 Housing Issue Detected
-
-Your representative **voted AGAINST** a housing affordability bill.
-
-### Why it matters:
-- Rent is increasing
-- Limited affordable housing
-- Fewer tenant protections
-
-### What you can do:
-- 📞 Call their office
-- ✉️ Send an email
-- 🗳️ Stay informed
-`;
-  }
-
-  if (lowerIssue.includes("climate")) {
-    return `
-## 🌍 Climate Policy
-
-Your representative has **supported climate initiatives**.
-
-### Next steps:
-- Learn about upcoming legislation
-- Contact their office to reinforce support
-`;
-  }
-
   return `
-## WIP
+## 🔍 Analyzing Issue
+
+You said: **${issue}**
+
+I’ll connect this to your representative and suggest actions shortly.
 `;
-} 
+}

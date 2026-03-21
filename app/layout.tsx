@@ -2,26 +2,12 @@
 
 import Link from "next/link";
 import "./globals.css";
-import { useState } from "react";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<null | { name: string }>(null);
-  const [open, setOpen] = useState(false);
-
-  const handleLogin = () => {
-    // fake login (for now)
-    setUser({ name: "Jagger" });
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setOpen(false);
-  };
-
   return (
     <html lang="en">
       <body>
@@ -66,10 +52,9 @@ export default function RootLayout({
               }}
             />
 
-            {/* 👤 AUTH AREA */}
-            {!user ? (
+            {/* 🔥 UPDATED BUTTON */}
+            <Link href="/login">
               <button
-                onClick={handleLogin}
                 style={{
                   backgroundColor: "#2563eb",
                   color: "white",
@@ -81,60 +66,7 @@ export default function RootLayout({
               >
                 Sign In
               </button>
-            ) : (
-              <div style={{ position: "relative" }}>
-                <div
-                  onClick={() => setOpen(!open)}
-                  style={{
-                    width: "36px",
-                    height: "36px",
-                    borderRadius: "50%",
-                    backgroundColor: "#1e293b",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    cursor: "pointer",
-                  }}
-                >
-                  {user.name[0]}
-                </div>
-
-                {/* DROPDOWN */}
-                {open && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      right: 0,
-                      top: "45px",
-                      backgroundColor: "white",
-                      color: "black",
-                      borderRadius: "10px",
-                      boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
-                      padding: "10px",
-                      minWidth: "150px",
-                    }}
-                  >
-                    <div style={{ padding: "8px" }}>
-                      👋 {user.name}
-                    </div>
-
-                    <button
-                      onClick={handleLogout}
-                      style={{
-                        width: "100%",
-                        padding: "8px",
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            </Link>
           </div>
         </div>
 
