@@ -2,97 +2,78 @@
 
 import { useEffect, useState } from "react";
 import { auth, db } from "@/lib/firebase";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
-import { onAuthStateChanged, User } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [zipcode, setZipcode] = useState("");
+  const [address, setAddress] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 🔥 Load existing address
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (u) => {
-      console.log("Auth user:", u);
-
-      if (!u) {
-        setLoading(false);
-        return;
-      }
-
-      setUser(u);
+    const loadUser = async () => {
+      const user = auth.currentUser;
+      if (!user) return;
 
       try {
-        const docRef = doc(db, "users", u.uid);
-        const snap = await getDoc(docRef);
-
-        console.log("Firestore result:", snap.exists());
-
-        // 🔥 If user doesn't exist → create it
-        if (!snap.exists()) {
-          await setDoc(docRef, {
-            name: u.displayName,
-            email: u.email,
-            photo: u.photoURL,
-            zipcode: "",
-            createdAt: new Date(),
-          });
-
-          setZipcode("");
-        } else {
-          setZipcode(snap.data().zipcode || "");
+        const snap = await getDoc(doc(db, "users", user.uid));
+        if (snap.exists()) {
+          setAddress(snap.data().address || "");
         }
       } catch (err) {
-        console.error("Firestore error:", err);
+        console.error(err);
       }
 
       setLoading(false);
-    });
+    };
 
-    return () => unsubscribe();
+    loadUser();
   }, []);
 
-  const handleSave = async () => {
+  // 🔥 Save address
+  const saveAddress = async () => {
+    const user = auth.currentUser;
     if (!user) return;
 
-    await updateDoc(doc(db, "users", user.uid), {
-      zipcode,
-    });
+    try {
+      await setDoc(
+        doc(db, "users", user.uid),
+        { address },
+        { merge: true }
+      );
 
-    alert("Zipcode saved!");
+      alert("Address saved!");
+    } catch (err) {
+      console.error(err);
+      alert("Error saving address");
+    }
   };
 
-  if (loading) {
-    return <div style={{ padding: "40px" }}>Loading...</div>;
-  }
-
-  if (!user) {
-    return <div style={{ padding: "40px" }}>Not logged in</div>;
-  }
+  if (loading) return <p>Loading...</p>;
 
   return (
-    <div style={{ padding: "40px" }}>
+    <div style={{ padding: "20px" }}>
       <h1>Your Profile</h1>
 
-      <p><strong>Name:</strong> {user.displayName}</p>
-      <p><strong>Email:</strong> {user.email}</p>
+      <p>Set your home address:</p>
 
-      <div style={{ marginTop: "20px" }}>
-        <input
-          value={zipcode}
-          onChange={(e) => setZipcode(e.target.value)}
-          placeholder="Enter your zipcode"
-          style={{
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            marginRight: "10px",
-          }}
-        />
+      <input
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+        placeholder="123 E Apache Blvd, Tempe, AZ"
+        style={{
+          padding: "10px",
+          borderRadius: "8px",
+          border: "1px solid #ccc",
+          width: "320px",
+          marginTop: "10px"
+        }}
+      />
 
-        <button onClick={handleSave}>
-          Save Zipcode
-        </button>
-      </div>
+      <br /><br />
+
+      <button onClick={saveAddress}>
+        Save Address
+      </button>
     </div>
   );
 }
