@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -6,16 +5,21 @@ import {
   ComposableMap,
   Geographies,
   Geography,
+  ZoomableGroup
 } from "react-simple-maps";
 
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-// 🔥 GeoJSON source (reliable)
-const geoUrl =
+// 🔥 State GeoJSON
+const stateGeoUrl =
   "https://unpkg.com/us-atlas@3/states-10m.json";
 
-// 🔥 Basic ZIP → STATE mapping (expand later)
+// 🔥 Congressional districts
+const districtGeoUrl =
+  "https://cdn.jsdelivr.net/npm/us-atlas@3/congress-118.json";
+
+// 🔥 VERY basic zip → state (expand later)
 const zipToState = (zip: string) => {
   const num = parseInt(zip);
 
@@ -29,12 +33,12 @@ const zipToState = (zip: string) => {
 export default function RepsPage() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [zipcode, setZipcode] = useState<string>("");
+  const [inputZip, setInputZip] = useState("");
 
   // 🔥 Load zipcode from Firebase
   useEffect(() => {
     const loadUser = async () => {
       const user = auth.currentUser;
-
       if (!user) return;
 
       try {
@@ -46,86 +50,140 @@ export default function RepsPage() {
           setZipcode(zip);
 
           const state = zipToState(zip);
-          if (state) {
-            setSelectedState(state);
-          }
+          if (state) setSelectedState(state);
         }
       } catch (err) {
-        console.error("Firestore error:", err);
+        console.error(err);
       }
     };
 
     loadUser();
   }, []);
 
+  // 🔥 Search ZIP manually
+  const handleSearch = () => {
+    const state = zipToState(inputZip);
+
+    if (state) {
+      setSelectedState(state);
+      setZipcode(inputZip);
+    } else {
+      alert("ZIP not supported yet (we’ll expand soon)");
+    }
+  };
+
   return (
-    
-    <div 
-    style={{ padding: "20px" }}>
-      <h1>MAP PAGE TEST</h1>
+    <div style={{ padding: "20px" }}>
       <h1>Find Your Representatives</h1>
 
-      {zipcode && <p>Your zipcode: {zipcode}</p>}
+      {/* 🔍 ZIP SEARCH */}
+      <div style={{ marginTop: "20px" }}>
+        <input
+          value={inputZip}
+          onChange={(e) => setInputZip(e.target.value)}
+          placeholder="Enter ZIP code"
+          style={{
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #ccc",
+            marginRight: "10px"
+          }}
+        />
 
-      {/* 🔥 MAP FIXED WITH HEIGHT */}
+        <button onClick={handleSearch}>
+          Search
+        </button>
+      </div>
+
+      {zipcode && (
+        <p style={{ marginTop: "10px" }}>
+          Current ZIP: {zipcode}
+        </p>
+      )}
+
+      {/* 🗺️ MAP */}
       <div style={{ width: "100%", height: "500px", marginTop: "20px" }}>
         <ComposableMap
           projection="geoAlbersUsa"
           style={{ width: "100%", height: "100%" }}
         >
-          <Geographies geography={geoUrl}>
-            {({ geographies }: any) =>
-              geographies.map((geo: any) => {
-                const state = geo.properties.name;
+          <ZoomableGroup center={[-97, 38]} zoom={selectedState ? 2 : 1}>
 
-                return (
+            {/* STATES */}
+            <Geographies geography={stateGeoUrl}>
+              {({ geographies }: any) =>
+                geographies.map((geo: any) => {
+                  const state = geo.properties.name;
+
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
+                      onClick={() => setSelectedState(state)}
+                      style={{
+                        default: {
+                          fill:
+                            selectedState === state
+                              ? "#2563eb"
+                              : "#E2E8F0",
+                          outline: "none"
+                        },
+                        hover: {
+                          fill: "#60A5FA",
+                          outline: "none",
+                          cursor: "pointer"
+                        }
+                      }}
+                    />
+                  );
+                })
+              }
+            </Geographies>
+
+            {/* DISTRICTS OVERLAY */}
+            <Geographies geography={districtGeoUrl}>
+              {({ geographies }: any) =>
+                geographies.map((geo: any) => (
                   <Geography
                     key={geo.rsmKey}
                     geography={geo}
-                    onClick={() => setSelectedState(state)}
                     style={{
                       default: {
-                        fill:
-                          selectedState === state
-                            ? "#2563eb"
-                            : "#E2E8F0",
-                        outline: "none",
-                      },
-                      hover: {
-                        fill: "#60A5FA",
-                        outline: "none",
-                        cursor: "pointer",
-                      },
+                        fill: "transparent",
+                        stroke: "#444",
+                        strokeWidth: 0.3
+                      }
                     }}
                   />
-                );
-              })
-            }
-          </Geographies>
+                ))
+              }
+            </Geographies>
+
+          </ZoomableGroup>
         </ComposableMap>
       </div>
 
-      {/* 🔥 INFO PANEL */}
+      {/* INFO PANEL */}
       {selectedState && (
         <div
           style={{
             marginTop: "20px",
             padding: "16px",
             background: "#f1f5f9",
-            borderRadius: "10px",
+            borderRadius: "10px"
           }}
         >
           <h2>{selectedState}</h2>
 
           <p><strong>Senators:</strong></p>
           <ul>
-            <li>Senator 1</li>
-            <li>Senator 2</li>
+            <li>Coming soon</li>
+            <li>Coming soon</li>
           </ul>
 
           <p><strong>House Representative:</strong></p>
           <ul>
-            <li>Representative Name</li>
+            <li>Coming soon</li>
           </ul>
         </div>
       )}
