@@ -13,11 +13,9 @@ import * as turf from "@turf/turf";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-// 🌎 US States
 const stateGeoUrl =
   "https://unpkg.com/us-atlas@3/states-10m.json";
 
-// 🏛️ Congressional districts
 const districtGeoUrl =
   "https://cdn.jsdelivr.net/npm/us-atlas@3/congress-118.json";
 
@@ -34,7 +32,7 @@ export default function RepsPage() {
       .then((data) => setDistricts(data));
   }, []);
 
-  // 🔥 Load user address → geocode → find district
+  // 🔥 Load user → geocode → find district
   useEffect(() => {
     const loadUser = async () => {
       const user = auth.currentUser;
@@ -49,7 +47,6 @@ export default function RepsPage() {
 
           if (!addr) return;
 
-          // 🌍 Geocode address
           const res = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`
           );
@@ -62,7 +59,6 @@ export default function RepsPage() {
 
             setCoords({ lat, lng });
 
-            // 🏛️ Find district
             if (districts) {
               const point = turf.point([lng, lat]);
 
@@ -83,12 +79,11 @@ export default function RepsPage() {
     loadUser();
   }, [districts]);
 
-  // 🔥 Map center logic
   const mapCenter = coords
     ? [coords.lng, coords.lat]
     : [-97, 38];
 
-  const mapZoom = coords ? 6 : 1;
+  const mapZoom = selectedDistrict ? 8 : coords ? 6 : 1;
 
   return (
     <div style={{ padding: "20px" }}>
@@ -142,11 +137,18 @@ export default function RepsPage() {
                     <Geography
                       key={geo.rsmKey}
                       geography={geo}
+                      onClick={() => setSelectedDistrict(geo.properties)}
                       style={{
                         default: {
-                          fill: isSelected ? "#2563eb" : "transparent",
-                          stroke: "#444",
-                          strokeWidth: isSelected ? 1 : 0.3
+                          fill: isSelected
+                            ? "#1d4ed8"
+                            : "rgba(0,0,0,0)",
+                          stroke: isSelected ? "#000" : "#666",
+                          strokeWidth: isSelected ? 2 : 0.3
+                        },
+                        hover: {
+                          fill: "#60A5FA",
+                          cursor: "pointer"
                         }
                       }}
                     />

@@ -6,6 +6,7 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 
 export default function ProfilePage() {
   const [address, setAddress] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 🔥 Load existing address
@@ -28,6 +29,27 @@ export default function ProfilePage() {
 
     loadUser();
   }, []);
+
+  // 🔥 Handle typing + autocomplete
+  const handleAddressChange = async (value: string) => {
+    setAddress(value);
+
+    if (value.length < 4) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(value)}`
+      );
+
+      const data = await res.json();
+      setSuggestions(data.slice(0, 5));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // 🔥 Save address
   const saveAddress = async () => {
@@ -58,8 +80,8 @@ export default function ProfilePage() {
 
       <input
         value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        placeholder="123 E Apache Blvd, Tempe, AZ"
+        onChange={(e) => handleAddressChange(e.target.value)}
+        placeholder="Start typing your address..."
         style={{
           padding: "10px",
           borderRadius: "8px",
@@ -68,6 +90,35 @@ export default function ProfilePage() {
           marginTop: "10px"
         }}
       />
+
+      {/* 🔽 AUTOCOMPLETE DROPDOWN */}
+      {suggestions.length > 0 && (
+        <div
+          style={{
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            marginTop: "5px",
+            maxWidth: "320px",
+            background: "white"
+          }}
+        >
+          {suggestions.map((s, i) => (
+            <div
+              key={i}
+              onClick={() => {
+                setAddress(s.display_name);
+                setSuggestions([]);
+              }}
+              style={{
+                padding: "8px",
+                cursor: "pointer"
+              }}
+            >
+              {s.display_name}
+            </div>
+          ))}
+        </div>
+      )}
 
       <br /><br />
 
