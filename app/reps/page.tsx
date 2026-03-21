@@ -11,15 +11,15 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-// 🔥 State GeoJSON
+// 🌎 State GeoJSON
 const stateGeoUrl =
   "https://unpkg.com/us-atlas@3/states-10m.json";
 
-// 🔥 Congressional districts
+// 🏛️ Congressional districts
 const districtGeoUrl =
   "https://cdn.jsdelivr.net/npm/us-atlas@3/congress-118.json";
 
-// 🔥 VERY basic zip → state (expand later)
+// 🔥 ZIP → STATE (basic for now)
 const zipToState = (zip: string) => {
   const num = parseInt(zip);
 
@@ -30,12 +30,18 @@ const zipToState = (zip: string) => {
   return null;
 };
 
+// 📍 STATE → MAP CENTER
+const stateCenters: Record<string, [number, number]> = {
+  Arizona: [-111.7, 34.3],
+  California: [-119.4, 36.8],
+  "New York": [-75.5, 43]
+};
+
 export default function RepsPage() {
   const [selectedState, setSelectedState] = useState<string | null>(null);
   const [zipcode, setZipcode] = useState<string>("");
-  const [inputZip, setInputZip] = useState("");
 
-  // 🔥 Load zipcode from Firebase
+  // 🔥 Load ZIP from Firebase → set state
   useEffect(() => {
     const loadUser = async () => {
       const user = auth.currentUser;
@@ -60,44 +66,21 @@ export default function RepsPage() {
     loadUser();
   }, []);
 
-  // 🔥 Search ZIP manually
-  const handleSearch = () => {
-    const state = zipToState(inputZip);
+  // 🔥 Determine map center + zoom
+  const mapCenter =
+    selectedState && stateCenters[selectedState]
+      ? stateCenters[selectedState]
+      : [-97, 38];
 
-    if (state) {
-      setSelectedState(state);
-      setZipcode(inputZip);
-    } else {
-      alert("ZIP not supported yet (we’ll expand soon)");
-    }
-  };
+  const mapZoom = selectedState ? 4 : 1;
 
   return (
     <div style={{ padding: "20px" }}>
       <h1>Find Your Representatives</h1>
 
-      {/* 🔍 ZIP SEARCH */}
-      <div style={{ marginTop: "20px" }}>
-        <input
-          value={inputZip}
-          onChange={(e) => setInputZip(e.target.value)}
-          placeholder="Enter ZIP code"
-          style={{
-            padding: "10px",
-            borderRadius: "8px",
-            border: "1px solid #ccc",
-            marginRight: "10px"
-          }}
-        />
-
-        <button onClick={handleSearch}>
-          Search
-        </button>
-      </div>
-
       {zipcode && (
         <p style={{ marginTop: "10px" }}>
-          Current ZIP: {zipcode}
+          Home ZIP: {zipcode}
         </p>
       )}
 
@@ -107,8 +90,8 @@ export default function RepsPage() {
           projection="geoAlbersUsa"
           style={{ width: "100%", height: "100%" }}
         >
-          <ZoomableGroup center={[-97, 38]} zoom={selectedState ? 2 : 1}>
-
+          <ZoomableGroup center={mapCenter} zoom={mapZoom}>
+            
             {/* STATES */}
             <Geographies geography={stateGeoUrl}>
               {({ geographies }: any) =>
@@ -140,7 +123,7 @@ export default function RepsPage() {
               }
             </Geographies>
 
-            {/* DISTRICTS OVERLAY */}
+            {/* DISTRICTS */}
             <Geographies geography={districtGeoUrl}>
               {({ geographies }: any) =>
                 geographies.map((geo: any) => (
