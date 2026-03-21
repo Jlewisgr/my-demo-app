@@ -1,4 +1,4 @@
-<h1>MAP PAGE TEST</h1>
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -59,7 +59,10 @@ export default function RepsPage() {
   }, []);
 
   return (
-    <div style={{ padding: "20px" }}>
+    
+    <div 
+    style={{ padding: "20px" }}>
+      <h1>MAP PAGE TEST</h1>
       <h1>Find Your Representatives</h1>
 
       {zipcode && <p>Your zipcode: {zipcode}</p>}
