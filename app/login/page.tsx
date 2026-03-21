@@ -1,7 +1,8 @@
 "use client";
 
 import { signInWithPopup } from "firebase/auth";
-import { auth, provider } from "@/lib/firebase";
+import { auth, provider, db } from "@/lib/firebase";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -9,16 +10,27 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      console.log("Starting login...");
-
       const result = await signInWithPopup(auth, provider);
+      const user = result.user;
 
-      console.log("SUCCESS:", result.user);
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      // 🔥 Create user if not exists
+      if (!userSnap.exists()) {
+        await setDoc(userRef, {
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+          zipcode: "", // 👈 we’ll use this later
+          createdAt: new Date(),
+        });
+      }
 
       router.push("/");
     } catch (err) {
-      console.error("LOGIN ERROR:", err);
-      alert("Login failed. Check console.");
+      console.error("Login error:", err);
+      alert("Login failed");
     }
   };
 

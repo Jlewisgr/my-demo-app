@@ -14,7 +14,7 @@ export default function RootLayout({
   const [user, setUser] = useState<User | null>(null);
   const [open, setOpen] = useState(false);
 
-  // 🔥 Listen for login state
+  // 🔥 Listen to Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
@@ -72,7 +72,6 @@ export default function RootLayout({
               }}
             />
 
-            {/* 🔥 AUTH UI */}
             {!user ? (
               <Link href="/login">
                 <button
@@ -90,7 +89,7 @@ export default function RootLayout({
               </Link>
             ) : (
               <div style={{ position: "relative" }}>
-                {/* PROFILE */}
+                {/* PROFILE IMAGE */}
                 <img
                   src={user.photoURL || ""}
                   alt="profile"
@@ -126,17 +125,11 @@ export default function RootLayout({
                       {user.email}
                     </div>
 
-                    <button
-                      onClick={handleLogout}
-                      style={{
-                        width: "100%",
-                        padding: "8px",
-                        border: "none",
-                        background: "none",
-                        cursor: "pointer",
-                        textAlign: "left",
-                      }}
-                    >
+                    <Link href="/profile">
+                      <button style={dropdownBtn}>Profile</button>
+                    </Link>
+
+                    <button onClick={handleLogout} style={dropdownBtn}>
                       Logout
                     </button>
                   </div>
@@ -159,4 +152,13 @@ const navBtn = {
   padding: "8px 12px",
   borderRadius: "8px",
   cursor: "pointer",
+};
+
+const dropdownBtn = {
+  width: "100%",
+  padding: "8px",
+  border: "none",
+  background: "none",
+  cursor: "pointer",
+  textAlign: "left" as const,
 };
