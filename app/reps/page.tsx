@@ -312,7 +312,12 @@ export default function RepsPage() {
           }}
         >
           <h2 style={{ marginTop: 0 }}>{selectedState}</h2>
-          
+          <p style={{ marginBottom: 8 }}>
+            The map is now zooming to the selected state and it still starts from your saved home ZIP.
+          </p>
+          <p style={{ marginBottom: 0 }}>
+            Exact district highlighting is the next step, but that needs a full address input rather than ZIP alone.
+          </p>
         </div>
       )}
     </div>
