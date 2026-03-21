@@ -9,10 +9,16 @@ export default function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      await signInWithPopup(auth, provider);
+      console.log("Starting login...");
+
+      const result = await signInWithPopup(auth, provider);
+
+      console.log("SUCCESS:", result.user);
+
       router.push("/");
     } catch (err) {
-      console.error(err);
+      console.error("LOGIN ERROR:", err);
+      alert("Login failed. Check console.");
     }
   };
 
