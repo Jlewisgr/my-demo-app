@@ -1,3 +1,4 @@
+<h1>MAP PAGE TEST</h1>
 "use client";
 
 import { useEffect, useState } from "react";
