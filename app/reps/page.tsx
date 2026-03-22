@@ -1,98 +1,124 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  ComposableMap,
-  Geographies,
-  Geography,
-  ZoomableGroup
-} from "react-simple-maps";
-
-import { auth, db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
-
-const geoUrl = "/data/districts.geojson";
-
 export default function RepsPage() {
-  const [selectedDistrict, setSelectedDistrict] = useState<any>(null);
-
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Congressional Districts</h1>
+    <div style={{ padding: "24px", maxWidth: "900px", margin: "0 auto" }}>
+      {/* HEADER */}
+      <h1 style={{ fontSize: "32px", fontWeight: "bold", marginBottom: "10px" }}>
+        Your Representatives
+      </h1>
 
-      <div style={{ width: "100%", height: "600px" }}>
-        <ComposableMap
-          projection="geoMercator"
-          projectionConfig={{
-            scale: 3200,          // 🔥 zoom into Alabama
-            center: [-86.8, 32.5] // 🔥 Alabama center
-          }}
-          style={{ width: "100%", height: "100%" }}
-        >
-          <ZoomableGroup>
+      <p style={{ color: "#64748b", marginBottom: "24px" }}>
+        Based on your saved address
+      </p>
 
-            <Geographies geography={geoUrl}>
-              {({ geographies }: { geographies: any[] }) =>
-                geographies.map((geo: any, i: number) => {
-                  const isSelected =
-                    selectedDistrict &&
-                    geo.properties?.GEOID === selectedDistrict?.GEOID;
-
-                  // 🎨 alternating colors for visibility
-                  const baseColor =
-                    i % 2 === 0
-                      ? "#93c5fd" // light blue
-                      : "#86efac"; // light green
-
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onClick={() => setSelectedDistrict(geo.properties)}
-                      style={{
-                        default: {
-                          fill: isSelected ? "#1d4ed8" : baseColor,
-                          stroke: "#111827",     // strong borders
-                          strokeWidth: 1.2,
-                          outline: "none"
-                        },
-                        hover: {
-                          fill: "#f59e0b",       // 🔥 strong hover
-                          stroke: "#000",
-                          strokeWidth: 1.5,
-                          outline: "none",
-                          cursor: "pointer"
-                        },
-                        pressed: {
-                          fill: "#dc2626"
-                        }
-                      }}
-                    />
-                  );
-                })
-              }
-            </Geographies>
-
-          </ZoomableGroup>
-        </ComposableMap>
+      {/* DISTRICT INFO */}
+      <div
+        style={{
+          background: "#f1f5f9",
+          padding: "16px",
+          borderRadius: "12px",
+          marginBottom: "24px"
+        }}
+      >
+        <h2 style={{ marginBottom: "8px" }}>Congressional District</h2>
+        <p style={{ fontSize: "18px", fontWeight: "600" }}>
+          Arizona District 5
+        </p>
       </div>
 
-      {/* 🏛️ Selected District Info */}
-      {selectedDistrict && (
-        <div
+      {/* HOUSE REPRESENTATIVE */}
+      <Section title="House Representative">
+        <RepCard
+          name="John Doe"
+          party="Republican"
+          phone="(202) 225-1234"
+          website="#"
+        />
+      </Section>
+
+      {/* SENATORS */}
+      <Section title="Senators">
+        <div style={{ display: "grid", gap: "16px" }}>
+          <RepCard
+            name="Jane Smith"
+            party="Democrat"
+            phone="(202) 224-5678"
+            website="#"
+          />
+          <RepCard
+            name="Michael Johnson"
+            party="Republican"
+            phone="(202) 224-9999"
+            website="#"
+          />
+        </div>
+      </Section>
+    </div>
+  );
+}
+
+/* 🔹 SECTION WRAPPER */
+function Section({ title, children }: any) {
+  return (
+    <div style={{ marginBottom: "24px" }}>
+      <h2 style={{ marginBottom: "12px", fontSize: "20px" }}>{title}</h2>
+      {children}
+    </div>
+  );
+}
+
+/* 🔹 REPRESENTATIVE CARD */
+function RepCard({ name, party, phone, website }: any) {
+  const partyColor =
+    party === "Democrat"
+      ? "#2563eb"
+      : party === "Republican"
+      ? "#dc2626"
+      : "#64748b";
+
+  return (
+    <div
+      style={{
+        background: "white",
+        padding: "16px",
+        borderRadius: "12px",
+        border: "1px solid #e2e8f0",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.05)"
+      }}
+    >
+      {/* NAME + PARTY */}
+      <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <h3 style={{ fontSize: "18px", fontWeight: "600" }}>{name}</h3>
+
+        <span
           style={{
-            marginTop: "20px",
-            padding: "16px",
-            background: "#f1f5f9",
-            borderRadius: "10px"
+            background: partyColor,
+            color: "white",
+            padding: "4px 10px",
+            borderRadius: "999px",
+            fontSize: "12px"
           }}
         >
-          <h2>{selectedDistrict.NAMELSAD}</h2>
-          <p><strong>District:</strong> {selectedDistrict.DISTRICT}</p>
-          <p><strong>Representative:</strong> {selectedDistrict.LISTING_NAME}</p>
-          <p><strong>Party:</strong> {selectedDistrict.PARTY}</p>
-        </div>
-      )}
+          {party}
+        </span>
+      </div>
+
+      {/* CONTACT INFO */}
+      <div style={{ marginTop: "10px", color: "#475569" }}>
+        <p>📞 {phone}</p>
+
+        <a
+          href={website}
+          style={{
+            color: "#2563eb",
+            textDecoration: "none",
+            fontWeight: "500"
+          }}
+        >
+          Visit Website →
+        </a>
+      </div>
     </div>
   );
 }
