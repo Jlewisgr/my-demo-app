@@ -116,6 +116,7 @@ export default function Home() {
  
       setMessages((prev) => [...prev, { role: "bot", content: reply }]);
     } catch (err) {
+      console.error("Chat error:", err); // 👈 add this line
       setMessages((prev) => [
         ...prev,
         { role: "bot", content: "Something went wrong. Please try again." },
