@@ -11,14 +11,13 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-const districtGeoUrl = "/data/districts.geojson";
+const geoUrl = "/data/districts.geojson";
 
 export default function RepsPage() {
-  const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<any>(null);
 
-  // 🔥 Load user address + geocode (simple version)
+  // 🔥 Load user location
   useEffect(() => {
     const loadUser = async () => {
       const user = auth.currentUser;
@@ -29,11 +28,9 @@ export default function RepsPage() {
 
         if (snap.exists()) {
           const addr = snap.data().address;
-          setAddress(addr);
 
           if (!addr) return;
 
-          // simple geocode
           const res = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`
           );
@@ -41,10 +38,10 @@ export default function RepsPage() {
           const data = await res.json();
 
           if (data.length > 0) {
-            const lat = parseFloat(data[0].lat);
-            const lng = parseFloat(data[0].lon);
-
-            setCoords({ lat, lng });
+            setCoords({
+              lat: parseFloat(data[0].lat),
+              lng: parseFloat(data[0].lon)
+            });
           }
         }
       } catch (err) {
@@ -59,29 +56,22 @@ export default function RepsPage() {
     ? [coords.lng, coords.lat]
     : [-97, 38];
 
-  const mapZoom = coords ? 6 : 1;
+  const mapZoom = coords ? 5 : 1;
 
   return (
     <div style={{ padding: "20px" }}>
-      <h1>Find Your Representatives</h1>
+      <h1>Congressional Districts</h1>
 
-      {address && <p>Home Address: {address}</p>}
-
-      {/* 🗺️ MAP */}
-      <div style={{ width: "100%", height: "500px", marginTop: "20px" }}>
-        <ComposableMap
-          projection="geoAlbersUsa"
-          style={{ width: "100%", height: "100%" }}
-        >
+      <div style={{ width: "100%", height: "600px" }}>
+        <ComposableMap projection="geoAlbersUsa">
           <ZoomableGroup center={mapCenter} zoom={mapZoom}>
 
-            {/* 🔥 DISTRICTS (CLEAN GEOJSON) */}
-            <Geographies geography={districtGeoUrl}>
-              {({ geographies }: any) =>
+            <Geographies geography={geoUrl}>
+              {({ geographies }: { geographies: any[] }) =>
                 geographies.map((geo: any) => {
                   const isSelected =
                     selectedDistrict &&
-                    geo.properties?.district === selectedDistrict?.district;
+                    geo.properties?.GEOID === selectedDistrict?.GEOID;
 
                   return (
                     <Geography
@@ -92,9 +82,9 @@ export default function RepsPage() {
                         default: {
                           fill: isSelected
                             ? "#2563eb"
-                            : "rgba(37,99,235,0.15)",
+                            : "rgba(59,130,246,0.15)",
                           stroke: "#1e293b",
-                          strokeWidth: 0.6
+                          strokeWidth: 0.5
                         },
                         hover: {
                           fill: "#60A5FA",
@@ -111,11 +101,10 @@ export default function RepsPage() {
         </ComposableMap>
       </div>
 
-      {/* INFO */}
       {selectedDistrict && (
         <div style={{ marginTop: "20px" }}>
           <h2>District</h2>
-          <p>{selectedDistrict.district}</p>
+          <p>{selectedDistrict.GEOID}</p>
         </div>
       )}
     </div>
