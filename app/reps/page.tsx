@@ -11,7 +11,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-const geoUrl = "/data/districts.geojson";
+const geoUrl = "/data/districts.json";
 
 export default function RepsPage() {
   const [coords, setCoords] = useState<any>(null);
