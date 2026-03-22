@@ -103,7 +103,7 @@ export default function RepsPage() {
         >
           <ZoomableGroup center={mapCenter} zoom={mapZoom}>
 
-            {/* STATES */}
+            {/* STATES BACKGROUND */}
             <Geographies geography={stateGeoUrl}>
               {({ geographies }: any) =>
                 geographies.map((geo: any) => (
@@ -112,11 +112,7 @@ export default function RepsPage() {
                     geography={geo}
                     style={{
                       default: {
-                        fill: "#E2E8F0",
-                        outline: "none"
-                      },
-                      hover: {
-                        fill: "#60A5FA",
+                        fill: "#f8fafc",
                         outline: "none"
                       }
                     }}
@@ -125,7 +121,7 @@ export default function RepsPage() {
               }
             </Geographies>
 
-            {/* DISTRICTS */}
+            {/* 🔥 DISTRICTS (VISIBLE NOW) */}
             <Geographies geography={districtGeoUrl}>
               {({ geographies }: any) =>
                 geographies.map((geo: any) => {
@@ -141,14 +137,17 @@ export default function RepsPage() {
                       style={{
                         default: {
                           fill: isSelected
-                            ? "#1d4ed8"
-                            : "rgba(0,0,0,0)",
-                          stroke: isSelected ? "#000" : "#666",
-                          strokeWidth: isSelected ? 2 : 0.3
+                            ? "#2563eb"
+                            : "rgba(37, 99, 235, 0.15)", // 👈 LIGHT BLUE ALL DISTRICTS
+                          stroke: "#1e293b", // 👈 DARK BORDER
+                          strokeWidth: isSelected ? 2 : 0.6
                         },
                         hover: {
                           fill: "#60A5FA",
                           cursor: "pointer"
+                        },
+                        pressed: {
+                          fill: "#1d4ed8"
                         }
                       }}
                     />
