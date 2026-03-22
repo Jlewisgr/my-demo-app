@@ -11,7 +11,7 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-const geoUrl = "/data/districts.json";
+const geoUrl = "/data/districts.geojson";
 
 export default function RepsPage() {
   const [coords, setCoords] = useState<any>(null);
@@ -51,23 +51,20 @@ export default function RepsPage() {
     loadUser();
   }, []);
 
-  // 📍 Map positioning
-  const mapCenter = coords
-    ? [coords.lng, coords.lat]
-    : [-97, 38];
-
-  const mapZoom = coords ? 5 : 1;
-
   return (
     <div style={{ padding: "20px" }}>
       <h1>Congressional Districts</h1>
 
       <div style={{ width: "100%", height: "600px" }}>
         <ComposableMap
-          projection="geoAlbersUsa"
+          projection="geoMercator"
+          projectionConfig={{
+            scale: 500,
+            center: [-98, 38]
+          }}
           style={{ width: "100%", height: "100%" }}
         >
-          <ZoomableGroup center={mapCenter} zoom={mapZoom}>
+          <ZoomableGroup>
 
             {/* 🔥 DISTRICTS */}
             <Geographies geography={geoUrl}>
@@ -77,10 +74,10 @@ export default function RepsPage() {
                     selectedDistrict &&
                     geo.properties?.GEOID === selectedDistrict?.GEOID;
 
-                  // 🎨 alternating colors for separation
+                  // 🎨 alternating colors for visibility
                   const baseColor =
                     i % 2 === 0
-                      ? "rgba(59,130,246,0.25)"  // blue
+                      ? "rgba(59,130,246,0.25)"   // blue
                       : "rgba(16,185,129,0.25)"; // green
 
                   return (
@@ -96,7 +93,7 @@ export default function RepsPage() {
                           outline: "none"
                         },
                         hover: {
-                          fill: "#f59e0b", // 🔥 orange hover
+                          fill: "#f59e0b", // 🔥 orange highlight
                           stroke: "#000",
                           strokeWidth: 1.2,
                           outline: "none",
@@ -116,7 +113,7 @@ export default function RepsPage() {
         </ComposableMap>
       </div>
 
-      {/* 🏛️ Selected district info */}
+      {/* 🏛️ Selected District Info */}
       {selectedDistrict && (
         <div
           style={{
