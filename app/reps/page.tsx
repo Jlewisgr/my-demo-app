@@ -11,45 +11,10 @@ import {
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 
-const geoUrl = "/data/districts.json";
+const geoUrl = "/data/districts.geojson";
 
 export default function RepsPage() {
-  const [coords, setCoords] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<any>(null);
-
-  // 🔥 Load user address → geocode
-  useEffect(() => {
-    const loadUser = async () => {
-      const user = auth.currentUser;
-      if (!user) return;
-
-      try {
-        const snap = await getDoc(doc(db, "users", user.uid));
-
-        if (snap.exists()) {
-          const addr = snap.data().address;
-          if (!addr) return;
-
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}`
-          );
-
-          const data = await res.json();
-
-          if (data.length > 0) {
-            setCoords({
-              lat: parseFloat(data[0].lat),
-              lng: parseFloat(data[0].lon)
-            });
-          }
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-
-    loadUser();
-  }, []);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -59,14 +24,13 @@ export default function RepsPage() {
         <ComposableMap
           projection="geoMercator"
           projectionConfig={{
-            scale: 500,
-            center: [-98, 38]
+            scale: 3200,          // 🔥 zoom into Alabama
+            center: [-86.8, 32.5] // 🔥 Alabama center
           }}
           style={{ width: "100%", height: "100%" }}
         >
           <ZoomableGroup>
 
-            {/* 🔥 DISTRICTS */}
             <Geographies geography={geoUrl}>
               {({ geographies }: { geographies: any[] }) =>
                 geographies.map((geo: any, i: number) => {
@@ -77,8 +41,8 @@ export default function RepsPage() {
                   // 🎨 alternating colors for visibility
                   const baseColor =
                     i % 2 === 0
-                      ? "rgba(59,130,246,0.25)"   // blue
-                      : "rgba(16,185,129,0.25)"; // green
+                      ? "#93c5fd" // light blue
+                      : "#86efac"; // light green
 
                   return (
                     <Geography
@@ -88,14 +52,14 @@ export default function RepsPage() {
                       style={{
                         default: {
                           fill: isSelected ? "#1d4ed8" : baseColor,
-                          stroke: "#0f172a",
-                          strokeWidth: 0.8,
+                          stroke: "#111827",     // strong borders
+                          strokeWidth: 1.2,
                           outline: "none"
                         },
                         hover: {
-                          fill: "#f59e0b", // 🔥 orange highlight
+                          fill: "#f59e0b",       // 🔥 strong hover
                           stroke: "#000",
-                          strokeWidth: 1.2,
+                          strokeWidth: 1.5,
                           outline: "none",
                           cursor: "pointer"
                         },
@@ -123,8 +87,10 @@ export default function RepsPage() {
             borderRadius: "10px"
           }}
         >
-          <h2>Selected District</h2>
-          <p><strong>GEOID:</strong> {selectedDistrict.GEOID}</p>
+          <h2>{selectedDistrict.NAMELSAD}</h2>
+          <p><strong>District:</strong> {selectedDistrict.DISTRICT}</p>
+          <p><strong>Representative:</strong> {selectedDistrict.LISTING_NAME}</p>
+          <p><strong>Party:</strong> {selectedDistrict.PARTY}</p>
         </div>
       )}
     </div>
