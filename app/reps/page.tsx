@@ -9,6 +9,7 @@ import {
 } from "react-simple-maps";
 
 import * as turf from "@turf/turf";
+import { feature } from "topojson-client";
 
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
@@ -16,7 +17,7 @@ import { doc, getDoc } from "firebase/firestore";
 const stateGeoUrl =
   "https://unpkg.com/us-atlas@3/states-10m.json";
 
-const districtGeoUrl =
+const districtTopoUrl =
   "https://cdn.jsdelivr.net/npm/us-atlas@3/congress-118.json";
 
 export default function RepsPage() {
@@ -25,11 +26,17 @@ export default function RepsPage() {
   const [districts, setDistricts] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState<any>(null);
 
-  // 🔥 Load district shapes
+  // 🔥 Convert TopoJSON → GeoJSON
   useEffect(() => {
-    fetch(districtGeoUrl)
+    fetch(districtTopoUrl)
       .then((res) => res.json())
-      .then((data) => setDistricts(data));
+      .then((topology) => {
+        const geo = feature(
+          topology,
+          topology.objects.districts
+        );
+        setDistricts(geo);
+      });
   }, []);
 
   // 🔥 Load user → geocode → find district
@@ -95,7 +102,6 @@ export default function RepsPage() {
         </p>
       )}
 
-      {/* 🗺️ MAP */}
       <div style={{ width: "100%", height: "500px", marginTop: "20px" }}>
         <ComposableMap
           projection="geoAlbersUsa"
@@ -103,7 +109,7 @@ export default function RepsPage() {
         >
           <ZoomableGroup center={mapCenter} zoom={mapZoom}>
 
-            {/* STATES BACKGROUND */}
+            {/* STATES */}
             <Geographies geography={stateGeoUrl}>
               {({ geographies }: any) =>
                 geographies.map((geo: any) => (
@@ -112,7 +118,7 @@ export default function RepsPage() {
                     geography={geo}
                     style={{
                       default: {
-                        fill: "#f8fafc",
+                        fill: "#f1f5f9",
                         outline: "none"
                       }
                     }}
@@ -121,46 +127,44 @@ export default function RepsPage() {
               }
             </Geographies>
 
-            {/* 🔥 DISTRICTS (VISIBLE NOW) */}
-            <Geographies geography={districtGeoUrl}>
-              {({ geographies }: any) =>
-                geographies.map((geo: any) => {
-                  const isSelected =
-                    selectedDistrict &&
-                    geo.properties?.GEOID === selectedDistrict?.GEOID;
+            {/* 🔥 REAL DISTRICTS */}
+            {districts && (
+              <Geographies geography={districts}>
+                {({ geographies }: any) =>
+                  geographies.map((geo: any) => {
+                    const isSelected =
+                      selectedDistrict &&
+                      geo.properties.GEOID === selectedDistrict.GEOID;
 
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                      onClick={() => setSelectedDistrict(geo.properties)}
-                      style={{
-                        default: {
-                          fill: isSelected
-                            ? "#2563eb"
-                            : "rgba(37, 99, 235, 0.15)", // 👈 LIGHT BLUE ALL DISTRICTS
-                          stroke: "#1e293b", // 👈 DARK BORDER
-                          strokeWidth: isSelected ? 2 : 0.6
-                        },
-                        hover: {
-                          fill: "#60A5FA",
-                          cursor: "pointer"
-                        },
-                        pressed: {
-                          fill: "#1d4ed8"
-                        }
-                      }}
-                    />
-                  );
-                })
-              }
-            </Geographies>
+                    return (
+                      <Geography
+                        key={geo.rsmKey}
+                        geography={geo}
+                        onClick={() => setSelectedDistrict(geo.properties)}
+                        style={{
+                          default: {
+                            fill: isSelected
+                              ? "#2563eb"
+                              : "rgba(59,130,246,0.15)",
+                            stroke: "#1e293b",
+                            strokeWidth: isSelected ? 2 : 0.5
+                          },
+                          hover: {
+                            fill: "#60A5FA",
+                            cursor: "pointer"
+                          }
+                        }}
+                      />
+                    );
+                  })
+                }
+              </Geographies>
+            )}
 
           </ZoomableGroup>
         </ComposableMap>
       </div>
 
-      {/* 🏛️ DISTRICT INFO */}
       {selectedDistrict && (
         <div
           style={{
@@ -171,11 +175,7 @@ export default function RepsPage() {
           }}
         >
           <h2>Congressional District</h2>
-          <p>
-            {selectedDistrict.name || selectedDistrict.GEOID}
-          </p>
-
-          <p><strong>Representative:</strong> Coming soon</p>
+          <p>{selectedDistrict.GEOID}</p>
         </div>
       )}
     </div>
